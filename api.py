@@ -5,7 +5,7 @@ import requests
 class Api:
     def __init__(self, s):
         self.s = s
-        self.do_parse()
+        self.films = self.do_parse()
 
     def get_html(self):
         s = self.s
@@ -14,9 +14,6 @@ class Api:
         s = s.replace(' ', '+')
         search = f"https://www.kinopoisk.ru/index.php?kp_query={s}"
         res = requests.get(search).text
-        f = open("q.html", "w", encoding="utf-8")
-        f.write(str(res))
-        f.close()
         return res
 
     def do_parse(self):
@@ -30,8 +27,8 @@ class Api:
 
             p_pic = s.find("p", class_="pic")
             a_pic = p_pic.find("a")
-            pic_id = str(a_pic).split("data-id=")[1].split('"')[1]
-            pic_url = f"https://www.kinopoisk.ru/images/sm_film/{pic_id}.jpg"
+            film_id = str(a_pic).split("data-id=")[1].split('"')[1]
+            bad_pic_url = f"https://www.kinopoisk.ru/images/sm_film/{film_id}.jpg"
 
             div_info = s.find("div", class_="info")
             p_name = div_info.find("p", class_="name")
@@ -39,7 +36,7 @@ class Api:
             year = p_name.find("span").text
             span_s = div_info.find_all("span", class_="gray")
             duration = span_s[0].text.split(',')[-1]
-            return {"name": name, "pic_url": pic_url, "year": year, "duration": duration}
+            return {"id": film_id, "name": name, "pic_url": bad_pic_url, "year": year, "duration": duration}
 
         html = self.get_html()
         soup = BeautifulSoup(html, features="html.parser")
@@ -52,7 +49,12 @@ class Api:
         for data in top5:
             i += 1
             films[i] = get_info(data)
-        self.films = films
+        return films
 
     def get_info(self):
         return self.films
+
+    def get_pic300x(self, film_id):
+        bad_pic_url = f"https://www.kinopoisk.ru/images/sm_film/{film_id}.jpg"
+        pic_url = requests.get(bad_pic_url).url.rsplit('/', 1)[0] + "/300x"
+        return pic_url
