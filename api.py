@@ -13,13 +13,20 @@ class Api:
         s = s.replace('  ', ' ')
         s = s.replace(' ', '+')
         search = f"https://www.kinopoisk.ru/index.php?kp_query={s}"
-        res = requests.get(search).content
+        res = requests.get(search).text
+        f = open("q.html", "w", encoding="utf-8")
+        f.write(str(res))
+        f.close()
         return res
 
     def do_parse(self):
         def get_info(s):
             div_right = s.find("div", class_="right")
-            rating = div_right.find("div").text
+            rating = div_right.find("div")
+            if rating:
+                rating = rating.text
+            else:
+                rating = "нет"
 
             p_pic = s.find("p", class_="pic")
             a_pic = p_pic.find("a")
